@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutAnalista Pro - Dados e IA</title>
+    <style>
+        :root { --primary: #00ff88; --bg: #0d1117; --card: #161b22; --text: #c9d1d9; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; padding: 20px; }
+        .container { background: var(--card); padding: 30px; border-radius: 16px; border: 1px solid #30363d; width: 100%; max-width: 600px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: var(--primary); text-align: center; font-size: 28px; text-transform: uppercase; letter-spacing: 2px; }
+        .input-group { margin-bottom: 15px; }
+        input { width: 100%; padding: 14px; background: #0d1117; border: 1px solid #30363d; border-radius: 8px; color: white; font-size: 16px; box-sizing: border-box; transition: 0.3s; }
+        input:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 8px rgba(0,255,136,0.2); }
+        button { width: 100%; padding: 15px; background: var(--primary); color: #000; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
+        button:hover { background: #00cc6d; transform: translateY(-2px); }
+        #resultado { margin-top: 25px; line-height: 1.8; font-size: 15px; border-top: 1px solid #30363d; padding-top: 20px; }
+        .loader { display: none; text-align: center; margin: 15px 0; color: var(--primary); font-style: italic; }
+        strong { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⚽ FutAnalista IA</h1>
+    <p style="text-align: center; opacity: 0.7;">Análise histórica profunda e insights para apostas</p>
+    
+    <div class="input-group">
+        <input type="text" id="time1" placeholder="Time da Casa (ex: Real Madrid)">
+    </div>
+    <div class="input-group">
+        <input type="text" id="time2" placeholder="Time Visitante (ex: Barcelona)">
+    </div>
+    
+    <button onclick="gerarAnalise()">Gerar Relatório Pro</button>
+
+    <div id="loader" class="loader">Buscando dados históricos e calculando probabilidades...</div>
+    <div id="resultado"></div>
+</div>
+
+<script>
+    async function gerarAnalise() {
+        const time1 = document.getElementById('time1').value;
+        const time2 = document.getElementById('time2').value;
+        const resultadoDiv = document.getElementById('resultado');
+        const loader = document.getElementById('loader');
+
+        if (!time1 || !time2) {
+            alert("Preencha os dois times para a análise.");
+            return;
+        }
+
+        const API_KEY = "AIzaSyB9OSXQmkifHCxXKnXqAkewcD58DG5bPeM"; 
+        const URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+
+        loader.style.display = "block";
+        resultadoDiv.innerHTML = "";
+
+        const prompt = {
+            contents: [{
+                parts: [{
+                    text: `Aja como um analista de dados esportivos. Analise o confronto ${time1} vs ${time2}. 
+                    Retorne em HTML formatado (use <strong> para destaques):
+                    1. Histórico Geral: Quem tem mais vitórias e média de gols.
+                    2. Artilheiros: Mencione um ou dois grandes nomes desse confronto.
+                    3. Placar Comum: Qual o resultado mais frequente.
+                    4. Palpite IA: Qual a probabilidade para o próximo jogo (Vitoria A, Empate ou Vitoria B).`
+                }]
+            }]
+        };
+
+        try {
+            const response = await fetch(URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(prompt)
+            });
+
+            const data = await response.json();
+            
+            if (data.error) {
+                resultadoDiv.innerHTML = "Erro na API: " + data.error.message;
+            } else {
+                let texto = data.candidates[0].content.parts[0].text;
+                // Converte markdown básico da IA para visual melhor no site
+                resultadoDiv.innerHTML = texto.replace(/\n/g, '<br>');
+            }
+        } catch (error) {
+            resultadoDiv.innerHTML = "Erro de conexão. Se estiver no PC, tente usar um servidor local ou hospedar no GitHub Pages.";
+            console.error(error);
+        } finally {
+            loader.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>
